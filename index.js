@@ -10,7 +10,7 @@ const bcrypt = require("bcrypt");
 
 
 
-const PORT = process.env.PORT || 7000;
+const PORT = process.env.PORT || 8000;
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
