@@ -4,8 +4,13 @@ const path = require("path");
 const mongoose = require('mongoose');
 const dbConnect = require("./config");
 const userData = require("./content");
+const { log } = require("console");
+const e = require("express");
+const bcrypt = require("bcrypt");
 
-const PORT = process.env.PORT || 5000;
+
+
+const PORT = process.env.PORT || 7000;
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
@@ -19,6 +24,39 @@ app.get('/', (req, res) => {
   });
 
 
+app.post('/submit-form', async (req, res) => {
+    try {
+        // Create a new instance of your Mongoose model (FormData)
+        console.log(req.body);
+        
+        const newFormData = new userData({
+            name: req.body.name,
+            email: req.body.email,
+            air_quality: req.body.air_quality,
+            heat_islands: req.body.heat_islands,
+            infrastructure: req.body.infrastructure,
+            underserved: req.body.underserved,
+            improvement: req.body.improvement,
+            importance: req.body.importance,
+            latitude: req.body.latitude,
+            longitude: req.body.longitude
+        });
+
+        // Save the form data to MongoDB
+        await newFormData.save();
+
+        // Send a success response
+        res.send('Data saved successfully.');
+    } catch (error) {
+        console.error(error);
+        console.log(error);
+        
+        res.status(500).send('Error saving data.');
+    }
+});
+
+
+
 app.post('/signup', async (req,res) => {
     try {
         const { name, email, password } = req.body;
@@ -30,7 +68,7 @@ app.post('/signup', async (req,res) => {
           });
         }
     
-        const existingUser = await UserModel.findOne({ email });
+        const existingUser = await userData.findOne({ email });
         if (existingUser) {
           return res.status(409).send({
             message: "User already exists.",
@@ -38,9 +76,9 @@ app.post('/signup', async (req,res) => {
           });
         }
     
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password,10);
     
-        const newUser = new UserModel({
+        const newUser = new userData({
           name,
           email,
           password: hashedPassword,
@@ -84,7 +122,7 @@ app.get('/login', async (req,res)=>{
           });
         }
     
-        const existingUser = await UserModel.findOne({ email });
+        const existingUser = await userData.findOne({ email });
     
         if (!existingUser) {
           return res.status(401).send({
@@ -95,7 +133,7 @@ app.get('/login', async (req,res)=>{
     
         const id = existingUser._id;
     
-        const customer = await CustomerModel.findOne({ userID: id });
+        const customer = await userData.findOne({ userID: id });
     
         const isPasswordValid = await bcrypt.compare(
           password,
